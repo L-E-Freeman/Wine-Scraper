@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+<html>
+    <title>
+        {% block title %}
+        
+        {% endblock title %} - Wine Scraper
+    </title>
+
+    <body>
+        {% block content %} 
+
+        {% endblock content %}
+    </body>
+</html>

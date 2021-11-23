@@ -1,8 +1,9 @@
 DROP TABLE IF EXISTS wine_list;
 
+/* ADD NOT NULL CONSTRAINT BACK TO VIVINO LINK WHEN DONE TROUBLESHOOTING */
 CREATE TABLE wine_list (
     wine_name TEXT PRIMARY KEY,
     waitrose_link VARCHAR NOT NULL,
-    vivino_link VARCHAR NOT NULL,
+    vivino_link VARCHAR,
     rating INTEGER DEFAULT NULL
 );
