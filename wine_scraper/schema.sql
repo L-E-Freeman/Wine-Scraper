@@ -1,7 +1,6 @@
-DROP TABLE IF EXISTS wine_list;
-
 /* ADD NOT NULL CONSTRAINT BACK TO VIVINO LINK WHEN DONE TROUBLESHOOTING */
-CREATE TABLE wine_list (
+DROP TABLE IF EXISTS wine_table;
+CREATE TABLE wine_table (
     wine_name TEXT PRIMARY KEY,
     waitrose_link VARCHAR NOT NULL,
     vivino_link VARCHAR,

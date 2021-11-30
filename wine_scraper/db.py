@@ -31,6 +31,11 @@ def init_db():
         # executescript is an sql method. 
         db.executescript(f.read().decode('utf8'))
 
+def reset_db():
+    """Clear all data from database."""
+    close_db()
+    init_db()
+
 @click.command('init-db')
 @with_appcontext
 def init_db_command():
