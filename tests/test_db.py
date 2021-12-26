@@ -21,3 +21,21 @@ def test_get_close_db(app):
         db.execute('SELECT 1')
 
     assert 'closed' in str(e.value)
+
+def test_init_db_command(runner, monkeypatch):
+    """
+    init_db command should call the init_db function and output a message.
+    """
+    class Recorder(object):
+        called = False
+    
+    def fake_init_db():
+        Recorder.called = True
+
+    # monkeypatch fixture replaces init_db function with one that records that
+    # it's been called. runner fixture written in conftest used to call 
+    # init_db command by name
+    monkeypatch.setattr('wine_scraper.db.init_db', fake_init_db)
+    result = runner.invoke(args=['init-db'])
+    assert 'Initialized' in result.output
+    assert Recorder.called

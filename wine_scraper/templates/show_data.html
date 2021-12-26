@@ -1,8 +1,10 @@
 {% extends 'base.html' %} 
 
 {% block content %}
-<p>Hello, world!</p>
+<p>Wines!</p>
 
-{{ result }}
+{% for item in result %} 
+    <li>{{item[0]}}</li>
+{%endfor %}
 {{ data }}
 {% endblock %}

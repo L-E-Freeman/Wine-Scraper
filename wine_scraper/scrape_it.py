@@ -3,16 +3,12 @@ import requests
 from bs4 import BeautifulSoup
 from wine_scraper.db import get_db, reset_db
 
-# Creates blueprint named 'auth'. 
-bp = Blueprint('scrape_it', __name__)
 
+bp = Blueprint('scrape_it', __name__)
 # Show single button for beginning the web scrape
 @bp.route('/')
 def begin_scrape_page():
     return render_template('begin_scrape_page.html')
-
-# Scrape data and return that data in a template. Currently used as a test 
-# to see if this will work.
 
 def parse_waitrose_wine_html(): 
     """
@@ -33,17 +29,23 @@ def parse_waitrose_wine_html():
     # includes plain text with the wine name.
     wine_names = soup.find_all("div", class_="productName")
 
-    wine_list = []
-    for item in wine_names: 
-        # Selecting only the link.
-        link = item.find('a')
-        link = link['href']
-        # Get only plain text (the wine name), and add tuple of 
-        # (wine name, wine link) to names list.
-        item_name = item.get_text()
-        wine_list.append((item_name, link))
-        
-    return wine_list
+    # Return error if wine names not found.
+    if len(wine_names) == 0:
+        error_msg = f"Could not find any wine names. Please check if the Waitrose "
+        "website has been changed."
+        return error_msg
+    else:
+        wine_list = []
+        for item in wine_names: 
+            # Selecting only the link.
+            link = item.find('a')
+            link = link['href']
+            # Get only plain text (the wine name), and add tuple of 
+            # (wine name, wine link) to names list.
+            item_name = item.get_text()
+            wine_list.append((item_name, link))
+            
+        return wine_list
 
 def save_scraped_data_to_db():
     """
@@ -52,7 +54,6 @@ def save_scraped_data_to_db():
 
     # Flush the database.
     reset_db()
-
     wine_list = parse_waitrose_wine_html()
 
     # Unpack tuple list. 
@@ -66,6 +67,31 @@ def save_scraped_data_to_db():
             (item_name, link))
     db.commit()
 
+
+def get_wine_names():
+    """Queries database for the names of stored wine names."""
+    db = get_db()
+    wine_names = db.execute(
+        'SELECT wine_name FROM wine_table'
+    ).fetchall()
+
+    return wine_names
+
+
+def search_vivino_for_wine_names():
+    """
+    Search vivino for each wine name in list from waitrose, look for exact 
+    matches.
+    """
+
+    # We're going to have to do something about Waitrose listings being 
+    # slightly different from Vivino's for the same wine. Perhaps percentage
+    # match? 
+
+    wine_names = get_wine_names()
+
+    
+
 @bp.route('/scrape')
 def show_scraped_data(): 
     """
@@ -75,8 +101,6 @@ def show_scraped_data():
 
     save_scraped_data_to_db()
 
-    wine_list = parse_waitrose_wine_html()
+    wine_names = get_wine_names()
 
-    return render_template('show_data.html', result=wine_list)
-
-
+    return render_template('show_data.html', result=wine_names)

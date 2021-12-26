@@ -4,7 +4,7 @@ import tempfile
 import pytest
 
 from wine_scraper import create_app
-from flaskr.db import get_db, init_db
+from wine_scraper.db import get_db, init_db
 
 # Join path to current file with data.sql, 'rb' opens the file in binary 
 # format. 
@@ -45,6 +45,7 @@ def client(app):
 
 # Creates a runner that can call the Click commands registered with app.
 # Click is a package that allows you to create neat command line interfaces.
+# test_cli_runner creates a CLI runner for testing the commands.
 @pytest.fixture
 def runner(app):
     return app.test_cli_runner()

@@ -4,5 +4,6 @@ CREATE TABLE wine_table (
     wine_name TEXT PRIMARY KEY,
     waitrose_link VARCHAR NOT NULL,
     vivino_link VARCHAR,
-    rating INTEGER DEFAULT NULL
+    rating INTEGER DEFAULT NULL,
+    price REAL DEFAULT NULL
 );
