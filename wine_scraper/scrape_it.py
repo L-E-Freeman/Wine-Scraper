@@ -27,25 +27,46 @@ def parse_waitrose_wine_html():
     soup = BeautifulSoup(page.content, "html.parser")
     # productName is class name used by Waitrose for their links, which also
     # includes plain text with the wine name.
-    wine_names = soup.find_all("div", class_="productName")
+    wine_cards = soup.find_all("div", class_="productCard")
+
 
     # Return error if wine names not found.
-    if len(wine_names) == 0:
+    if len(wine_cards) == 0:
         error_msg = f"Could not find any wine names. Please check if the Waitrose "
         "website has been changed."
         return error_msg
     else:
         wine_list = []
-        for item in wine_names: 
-            # Selecting only the link.
-            link = item.find('a')
+        for item in wine_cards:
+            product_name_div = item.find("div", class_="productName")
+            link = product_name_div.find('a')
             link = link['href']
-            # Get only plain text (the wine name), and add tuple of 
-            # (wine name, wine link) to names list.
-            item_name = item.get_text()
-            wine_list.append((item_name, link))
+            item_name = product_name_div.get_text()
             
+            item_price_div = item.find("div", class_="productCurrentPrice")
+            item_price = item_price_div.get_text()
+            # TODO: filter price and convert to float. 
+
+            wine_list.append((item_name, link, item_price))
+
         return wine_list
+    
+
+
+
+
+    # else:
+    #     wine_list = []
+    #     for item in wine_names: 
+    #         # Selecting only the link.
+    #         link = item.find('a')
+    #         link = link['href']
+    #         # Get only plain text (the wine name), and add tuple of 
+    #         # (wine name, wine link) to names list.
+    #         item_name = item.get_text()
+    #         wine_list.append((item_name, link))
+            
+    #     return wine_list
 
 def save_scraped_data_to_db():
     """
@@ -60,11 +81,12 @@ def save_scraped_data_to_db():
     for tuple in wine_list:
         item_name = tuple[0]
         link = tuple[1]
+        price = tuple[2]
 
         db = get_db()
         db.execute(
-            "INSERT INTO wine_table (wine_name, waitrose_link) VALUES (?, ?)", 
-            (item_name, link))
+            "INSERT INTO wine_table (wine_name, waitrose_link, price) VALUES (?, ?, ?)", 
+            (item_name, link, price))
     db.commit()
 
 
@@ -72,7 +94,7 @@ def get_wine_names():
     """Queries database for the names of stored wine names."""
     db = get_db()
     wine_names = db.execute(
-        'SELECT wine_name FROM wine_table'
+        'SELECT price FROM wine_table'
     ).fetchall()
 
     return wine_names
