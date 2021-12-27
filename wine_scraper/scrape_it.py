@@ -32,8 +32,8 @@ def parse_waitrose_wine_html():
 
     # Return error if wine names not found.
     if len(wine_cards) == 0:
-        error_msg = f"Could not find any wine names. Please check if the Waitrose "
-        "website has been changed."
+        error_msg = f"Could not find any wine names. Please check if"
+        "the Waitrose website has been changed."
         return error_msg
     else:
         wine_list = []
@@ -41,36 +41,23 @@ def parse_waitrose_wine_html():
             product_name_div = item.find("div", class_="productName")
             link = product_name_div.find('a')
             link = link['href']
-            item_name = product_name_div.get_text()
+            item_name = product_name_div.get_text().strip()
             
             item_price_div = item.find("div", class_="productCurrentPrice")
             item_price = item_price_div.get_text()
-            # TODO: filter price and convert to float. 
+
+            # Change price to correct format.
+            chars_to_remove = "Now£"
+            for char in chars_to_remove:
+                item_price = item_price.replace(char, "")
 
             wine_list.append((item_name, link, item_price))
 
         return wine_list
-    
-
-
-
-
-    # else:
-    #     wine_list = []
-    #     for item in wine_names: 
-    #         # Selecting only the link.
-    #         link = item.find('a')
-    #         link = link['href']
-    #         # Get only plain text (the wine name), and add tuple of 
-    #         # (wine name, wine link) to names list.
-    #         item_name = item.get_text()
-    #         wine_list.append((item_name, link))
-            
-    #     return wine_list
 
 def save_scraped_data_to_db():
     """
-    Save wine names and links to db.
+    Save wine information to db.
     """
 
     # Flush the database.
@@ -90,11 +77,12 @@ def save_scraped_data_to_db():
     db.commit()
 
 
-def get_wine_names():
-    """Queries database for the names of stored wine names."""
+def get_wine_names_for_search():
+    """Queries database for the names of stored wine names for use in vivino 
+    search."""
     db = get_db()
     wine_names = db.execute(
-        'SELECT price FROM wine_table'
+        'SELECT wine_name FROM wine_table'
     ).fetchall()
 
     return wine_names
@@ -110,9 +98,33 @@ def search_vivino_for_wine_names():
     # slightly different from Vivino's for the same wine. Perhaps percentage
     # match? 
 
-    wine_names = get_wine_names()
+    base_URL = "https://www.vivino.com/search/wines?q="
+
+    # Loop through wine_names and create a list of URL's by adding the wine 
+    # name search to base url. 
+    wine_names = get_wine_names_for_search()
+    wines_for_querying = []
+    for wine in wine_names:
+        formatted_wine_name = wine[0].rstrip().replace(" ", "+")
+        wines_for_querying.append(formatted_wine_name)
+    
+    
+    for item in wines_for_querying:
+        full_URL = base_URL + item
+
+
+    return wines_for_querying
 
     
+
+def get_wine_info_for_display():
+    """Queries database for the names of stored wine names."""
+    db = get_db()
+    wine_info = db.execute(
+        'SELECT wine_name, waitrose_link, price FROM wine_table'
+    ).fetchall()
+
+    return wine_info
 
 @bp.route('/scrape')
 def show_scraped_data(): 
@@ -123,6 +135,7 @@ def show_scraped_data():
 
     save_scraped_data_to_db()
 
-    wine_names = get_wine_names()
-
-    return render_template('show_data.html', result=wine_names)
+    wines = search_vivino_for_wine_names()
+    
+    return render_template('show_data.html', wines = wines)
+ 
